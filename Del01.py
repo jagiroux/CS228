@@ -9,25 +9,24 @@ from pygameWindow import PYGAME_WINDOW
 x = 1000
 y = 1000
 
-#xMin = 1000.0
-#xMax = -1000.0
-#yMin = 1000.0
-#yMax = -1000.0
+xMin = 1000.0
+xMax = -1000.0
+yMin = 1000.0
+yMax = -1000.0
 
-xMin = -278.0
-xMax = 269.0
-yMin = 20.0
-yMax = 564.0
+#xMin = -278.0
+#xMax = 269.0
+#yMin = 20.0
+#yMax = 564.0
 
 def Scale(var, min1, max1, min2, max2):
     range1 = max1 - min1
     range2 = max2 - min2
     if (max1 == min1):
-        range1 = max1 + min1
-    if (max2 == min2):
-        range2 = max2 + min2
-
-    scaled_value = ( ( (var - min1) / range1 ) * range2) + min2
+        scaled_value = float(range2) / 2 + min2
+        
+    else:
+        scaled_value = ( ( float(var - min1) / range1 ) * range2) + min2
     return scaled_value
 
 def Handle_Frame(frame):
@@ -50,8 +49,6 @@ def Handle_Frame(frame):
     if ( y > yMax ):
         yMax = y
 
-    print("xMin: ", xMin, " xMax: ", xMax, " yMin: ", yMin, " yMax: ", yMax)
-
 pygameWindow = PYGAME_WINDOW()
 
 controller = Leap.Controller()
@@ -62,8 +59,8 @@ while True:
 
     pygameX = Scale(x, xMin, xMax, 0, constants.pygameWindowWidth)
     pygameY = Scale(y, yMin, yMax, constants.pygameWindowDepth, 0)
+    
         
     pygameWindow.Prepare()
     pygameWindow.Draw_Black_Circle(int(pygameX), int(pygameY))
     pygameWindow.Reveal()
-
