@@ -34,21 +34,21 @@ def Handle_Frame(frame):
     for finger in fingers:
         Handle_Finger(finger)
 
-#    indexFingerList = fingers.finger_type(Finger.TYPE_INDEX)
-#    indexFinger = indexFingerList[0]
-#    distalPhalanx = indexFinger.bone(Bone.TYPE_DISTAL)
-#    tip = distalPhalanx.next_joint
-#    x = int(tip[0])
-#    y = int(tip[1])
+    indexFingerList = fingers.finger_type(Finger.TYPE_INDEX)
+    indexFinger = indexFingerList[0]
+    distalPhalanx = indexFinger.bone(Bone.TYPE_DISTAL)
+    tip = distalPhalanx.next_joint
+    x = int(tip[0])
+    y = int(tip[1])
 
-#    if ( x < xMin ):
-#        xMin = x
-#    if ( x > xMax ):
-#        xMax = x
-#    if (y < yMin ):
-#        yMin = y
-#    if ( y > yMax ):
-#        yMax = y
+    if ( x < xMin ):
+        xMin = x
+    if ( x > xMax ):
+        xMax = x
+    if (y < yMin ):
+        yMin = y
+    if ( y > yMax ):
+        yMax = y
 
 def Handle_Finger(finger):
     for b in range (0,4):
@@ -59,10 +59,15 @@ def Handle_Bone(bone):
     tip = bone.next_joint
     base_x, base_y = Handle_Vector_From_Leap(base)
     tip_x, tip_y = Handle_Vector_From_Leap(tip)
-    pygameWindow.Draw_Black_Line(base_x, base_y, tip_x, tip_y)
+    pygameWindow.Draw_Black_Line(base_x, base_y, tip_x, tip_y, 3 - bone.type)
 
 def Handle_Vector_From_Leap(v):
-    return v[0], v[1]
+    global xMin, xMax, yMin, yMax
+
+    x = Scale(v[0], xMin, xMax, 0, constants.pygameWindowWidth)
+    y = Scale(v[2], yMin, yMax, 0, constants.pygameWindowDepth)
+
+    return x, y
 
 #MAIN
 controller = Leap.Controller()
@@ -72,8 +77,4 @@ while True:
     if(len(frame.hands) > 0):
         Handle_Frame(frame)
 
- #   pygameX = Scale(x, xMin, xMax, 0, constants.pygameWindowWidth)
- #   pygameY = Scale(y, yMin, yMax, constants.pygameWindowDepth, 0)
-    
- #   pygameWindow.Draw_Black_Circle(int(pygameX), int(pygameY))
     pygameWindow.Reveal()
