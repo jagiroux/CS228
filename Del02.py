@@ -4,7 +4,10 @@ sys.path.insert(0, '..')
 sys.path.insert(1, "../x86")
 import Leap
 from Leap import Finger, Bone
+import pygame
 from pygameWindow import PYGAME_WINDOW
+
+pygameWindow = PYGAME_WINDOW()
 
 x = 1000
 y = 1000
@@ -13,11 +16,6 @@ xMin = 1000.0
 xMax = -1000.0
 yMin = 1000.0
 yMax = -1000.0
-
-#xMin = -278.0
-#xMax = 269.0
-#yMin = 20.0
-#yMax = 564.0
 
 def Scale(var, min1, max1, min2, max2):
     range1 = max1 - min1
@@ -35,7 +33,6 @@ def Handle_Frame(frame):
     fingers = hand.fingers
     for finger in fingers:
         Handle_Finger(finger)
-    exit()
 
 #    indexFingerList = fingers.finger_type(Finger.TYPE_INDEX)
 #    indexFinger = indexFingerList[0]
@@ -60,12 +57,14 @@ def Handle_Finger(finger):
 def Handle_Bone(bone):
     base = bone.prev_joint
     tip = bone.next_joint
-    print base
-    print tip
-    
+    base_x, base_y = Handle_Vector_From_Leap(base)
+    tip_x, tip_y = Handle_Vector_From_Leap(tip)
+    pygameWindow.Draw_Black_Line(base_x, base_y, tip_x, tip_y)
 
-pygameWindow = PYGAME_WINDOW()
+def Handle_Vector_From_Leap(v):
+    return v[0], v[1]
 
+#MAIN
 controller = Leap.Controller()
 while True:
     pygameWindow.Prepare()
