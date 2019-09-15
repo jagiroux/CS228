@@ -5,18 +5,24 @@ import sys
 sys.path.insert(0, '..')
 sys.path.insert(1, "../x86")
 import Leap
+import numpy as np
 from Leap import Finger, Bone
 
 class DELIVERABLE:
     def __init__(self):
         self.pygameWindow = PYGAME_WINDOW()
-        self.x = 500
-        self.y = 500
+        self.x = 300
+        self.y = 300
         self.xMin = 1000.0
         self.xMax = -1000.0
         self.yMin = 1000.0
         self.yMax = -1000.0
         self.controller = Leap.Controller()
+
+        self.previousNumberOfHands = 0
+        self.currentNumberOfHands = 0
+
+        self.gesturedata = np.zeros((5,4,6), dtype='f')
 
     def Scale(self, var, min1, max1, min2, max2):
         range1 = max1 - min1
@@ -50,23 +56,31 @@ class DELIVERABLE:
         if ( y > self.yMax ):
             self.yMax = y
 
+        if self.Recording_Is_Ending():
+            print(self.gesturedata)
+
     def Handle_Finger(self, finger):
         for b in range (0,4):
-            self.Handle_Bone(finger.bone(b))
+            self.Handle_Bone(finger.bone(b), finger)
 
-    def Handle_Bone(self, bone):
+    def Handle_Bone(self, bone, finger):
         base = bone.prev_joint
         tip = bone.next_joint
         base_x, base_y = self.Handle_Vector_From_Leap(base)
         tip_x, tip_y = self.Handle_Vector_From_Leap(tip)
-
-        self.numberOfHands = len(self.controller.frame().hands)
-        print(self.numberOfHands)
         
-        if self.numberOfHands == 1:
+        if self.currentNumberOfHands == 1:
             self.pygameWindow.Draw_Line(base_x, base_y, tip_x, tip_y, 3 - bone.type, (0,255,0))
-        if self.numberOfHands == 2:
-            self.pygameWindow.Draw_Line(base_x, base_y, tip_x, tip_y, 3 - bone.type, (255,0,0))   
+        if self.currentNumberOfHands == 2:
+            self.pygameWindow.Draw_Line(base_x, base_y, tip_x, tip_y, 3 - bone.type, (255,0,0))
+
+        self.gesturedata[finger.type,bone.type,0] = base[0]
+        self.gesturedata[finger.type,bone.type,1] = base[1]
+        self.gesturedata[finger.type,bone.type,2] = base[2]
+        self.gesturedata[finger.type,bone.type,3] = tip[0]
+        self.gesturedata[finger.type,bone.type,4] = tip[1]
+        self.gesturedata[finger.type,bone.type,5] = tip[2]
+
 
     def Handle_Vector_From_Leap(self, v):
 
@@ -82,7 +96,14 @@ class DELIVERABLE:
     def Run_Once(self):
         self.pygameWindow.Prepare()
         self.frame = self.controller.frame()
+        self.currentNumberOfHands = len(self.frame.hands)
         if(len(self.frame.hands) > 0):
             self.Handle_Frame(self.frame)
-
         self.pygameWindow.Reveal()
+        self.previousNumberOfHands = self.currentNumberOfHands
+
+    def Recording_Is_Ending(self):
+        if (self.currentNumberOfHands == 1 and self.previousNumberOfHands == 2):
+            return True
+        else:
+            return False
