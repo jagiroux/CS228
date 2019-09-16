@@ -1,6 +1,8 @@
 import constants
 from pygameWindow_Del03 import PYGAME_WINDOW
 import pygame
+import os
+import shutil
 import sys
 sys.path.insert(0, '..')
 sys.path.insert(1, "../x86")
@@ -25,6 +27,8 @@ class DELIVERABLE:
 
         self.gesturedata = np.zeros((5,4,6), dtype='f')
         self.gesturenumber = 0
+
+        self.Clear_Data()
 
     def Scale(self, var, min1, max1, min2, max2):
         range1 = max1 - min1
@@ -119,3 +123,7 @@ class DELIVERABLE:
         pickle.dump(self.gesturedata, pickle_out)
         pickle_out.close()
         self.gesturenumber = self.gesturenumber + 1
+
+    def Clear_Data(self):
+        shutil.rmtree("userData")
+        os.mkdir("userData")
