@@ -6,6 +6,7 @@ sys.path.insert(0, '..')
 sys.path.insert(1, "../x86")
 import Leap
 import numpy as np
+import pickle
 from Leap import Finger, Bone
 
 class DELIVERABLE:
@@ -23,6 +24,7 @@ class DELIVERABLE:
         self.currentNumberOfHands = 0
 
         self.gesturedata = np.zeros((5,4,6), dtype='f')
+        self.gesturenumber = 0
 
     def Scale(self, var, min1, max1, min2, max2):
         range1 = max1 - min1
@@ -58,6 +60,7 @@ class DELIVERABLE:
 
         if self.Recording_Is_Ending():
             print(self.gesturedata)
+            self.Save_Gesture()
 
     def Handle_Finger(self, finger):
         for b in range (0,4):
@@ -74,12 +77,15 @@ class DELIVERABLE:
         if self.currentNumberOfHands == 2:
             self.pygameWindow.Draw_Line(base_x, base_y, tip_x, tip_y, 3 - bone.type, (255,0,0))
 
-        self.gesturedata[finger.type,bone.type,0] = base[0]
-        self.gesturedata[finger.type,bone.type,1] = base[1]
-        self.gesturedata[finger.type,bone.type,2] = base[2]
-        self.gesturedata[finger.type,bone.type,3] = tip[0]
-        self.gesturedata[finger.type,bone.type,4] = tip[1]
-        self.gesturedata[finger.type,bone.type,5] = tip[2]
+        if (self.Recording_Is_Ending()):
+            self.gesturedata[finger.type,bone.type,0] = base[0]
+            self.gesturedata[finger.type,bone.type,1] = base[1]
+            self.gesturedata[finger.type,bone.type,2] = base[2]
+            self.gesturedata[finger.type,bone.type,3] = tip[0]
+            self.gesturedata[finger.type,bone.type,4] = tip[1]
+            self.gesturedata[finger.type,bone.type,5] = tip[2]
+
+    
 
 
     def Handle_Vector_From_Leap(self, v):
@@ -107,3 +113,9 @@ class DELIVERABLE:
             return True
         else:
             return False
+
+    def Save_Gesture(self):
+        pickle_out = open("userData/gesture" + str(self.gesturenumber) + ".p", "wb")
+        pickle.dump(self.gesturedata, pickle_out)
+        pickle_out.close()
+        self.gesturenumber = self.gesturenumber + 1
