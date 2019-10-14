@@ -18,4 +18,7 @@ class PYGAME_WINDOW:
     def Draw_Black_Line(self, base_x, base_y, tip_x, tip_y, size):
         pygame.draw.line(self.screen, (0,0,0), (base_x, base_y), (tip_x, tip_y), size)
 
+    def Draw_Image(self, image, x, y, scale_x, scale_y):
+        image = pygame.transform.scale(image, (scale_x, scale_y))
+        self.screen.blit(image, (x, y))
     
