@@ -21,4 +21,8 @@ class PYGAME_WINDOW:
     def Draw_Image(self, image, x, y, scale_x, scale_y):
         image = pygame.transform.scale(image, (scale_x, scale_y))
         self.screen.blit(image, (x, y))
+
+    def Draw_Graph(self, x, y, width, height, color):
+        pygame.draw.rect(self.screen, color, (x,y,width,height), 0)
+        
     

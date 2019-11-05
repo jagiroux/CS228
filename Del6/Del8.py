@@ -12,12 +12,11 @@ import numpy as np
 from pygameWindow import PYGAME_WINDOW
 
 clf = pickle.load( open('userData/classifier.p', 'rb') )
-global testData, programState, centerOfHandX, centerOfHandY, timeSinceWrong, previousPredicted, numPredictions, userRecord
+global testData, programState, centerOfHandX, centerOfHandY, timeSinceWrong, previousPredicted, numPredictions, userRecord, timer
 previousPredicted = 999
 programState = 0
 numPredictions = 0
 timeSinceWrong = 0
-randInt = random.randint(0,9)
 
 database = pickle.load(open('userData/database.p','rb'))
 userName = raw_input('Please enter your name: ')
@@ -28,7 +27,7 @@ if userName in database:
     database[userName]["logins"] += 1
 
 else:
-    database[userName] = {"logins":1, "digit0attempted":0, "digit1attempted":0, "digit2attempted":0, "digit3attempted":0, "digit4attempted":0, "digit5attempted":0, "digit6attempted":0, "digit7attempted":0, "digit8attempted":0, "digit9attempted":0}
+    database[userName] = {"logins":1, "digit0attempted":0, "digit1attempted":0, "digit2attempted":0, "digit3attempted":0, "digit4attempted":0, "digit5attempted":0, "digit6attempted":0, "digit7attempted":0, "digit8attempted":0, "digit9attempted":0, "successful":0, "digit0success":0, "digit1success":0, "digit2success":0, "digit3success":0, "digit4success":0, "digit5success":0, "digit6success":0, "digit7success":0, "digit8success":0, "digit9success":0}
     userRecord = database[userName]
     print('Welcome ' + userName + '.')
 
@@ -38,6 +37,7 @@ down_arrow = pygame.image.load("handdown.bmp")
 left_arrow = pygame.image.load("handleft.bmp")
 right_arrow = pygame.image.load("handright.bmp")
 correct = pygame.image.load("correct.bmp")
+incorrect = pygame.image.load("incorrect.bmp")
 zero = pygame.image.load("zero.bmp")
 one = pygame.image.load("one.bmp")
 two = pygame.image.load("two.bmp")
@@ -111,7 +111,7 @@ def Handle_Frame(frame):
         yMax = y
 
     previousPredicted = predictedClass
-    text = "Digit: " + str(randInt) + " Times presented: " + str(userRecord["digit" + str(randInt) + "attempted"])
+    text = "Digit: " + str(randInt) + " Presented: " + str(userRecord["digit" + str(randInt) + "attempted"]) + " Success: " + str(userRecord["digit" + str(randInt) + "success"])
     font = pygame.font.Font(pygame.font.get_default_font(), 15)
     text = font.render(text, True, (0,0,0))
     pygameWindow.screen.blit(text, (0,constants.pygameWindowDepth / 2))
@@ -186,7 +186,7 @@ def isHandCentered():
         return 0
 
 def HandleState1():
-    global programState, timeSinceWrong, k
+    global programState, timeSinceWrong, k, timer
     k = 0
     Handle_Frame(frame)
 
@@ -210,22 +210,27 @@ def HandleState1():
     else:
         if ((time.time() - timeSinceWrong) > 1 ):
             pygameWindow.Draw_Image(correct, constants.pygameWindowWidth / 2, 0, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
-            
+            timer = time.time()
             programState = 2
 
     if (len(frame.hands) == 0):
         programState = 0
 
 def HandleState2():
-    global programState, randInt, k
+    global programState, randInt, k, timer, numPredictions
 
     k = 0
     Handle_Frame(frame)
     handImages = [zero, one, two, three, four, five, six, seven, eight, nine]
     handSymbols = [num0, num1, num2, num3, num4, num5, num6, num7, num8, num9]
-
+    
+    minimumTimer = 10 - (userRecord["digit" + str(randInt) + "attempted"])
+    if((10 - (userRecord["digit" + str(randInt) + "attempted"])) < 5):
+        minimumTimer = 5
+        
     pygameWindow.Draw_Image(handSymbols[randInt], constants.pygameWindowWidth / 2, 0, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))    
-    pygameWindow.Draw_Image(handImages[randInt], constants.pygameWindowWidth / 2, constants.pygameWindowDepth / 2, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
+    if (userRecord["digit" + str(randInt) + "attempted"] < 6):
+        pygameWindow.Draw_Image(handImages[randInt], constants.pygameWindowWidth / 2, constants.pygameWindowDepth / 2, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
     
     if (isHandCentered() > 0):
         programState = 1
@@ -233,18 +238,27 @@ def HandleState2():
     if (len(frame.hands) == 0):
         programState = 0
 
-    if (numPredictions == 10):
+    elif ((time.time() - timer) > minimumTimer):
+        timer = time.time()
+        pygameWindow.Draw_Image(incorrect, 0, 0, (constants.pygameWindowWidth), (constants.pygameWindowDepth)) 
+        userRecord["digit" + str(randInt) + "attempted"] += 1
+        randInt = random.randint(0, (userRecord["successful"] / 3) + 1)
+        numPredictions = 0
+
+    elif (numPredictions == 10):
         userRecord["digit" + str(randInt) + "attempted"] += 1
         programState = 3
         
 
 def HandleState3():
-    global programState, randInt, k, numPredictions
+    global programState, randInt, k, numPredictions, timer
     k = 0
     numPredictions = 0
-    randInt = random.randint(0,9)
+    userRecord["successful"] += 1
+    userRecord["digit" + str(randInt) + "success"] += 1
+    randInt = random.randint(0, (userRecord["successful"] / 3) + 1)
     Handle_Frame(frame)
-    pygameWindow.Draw_Image(correct, constants.pygameWindowWidth / 2, 0, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
+    pygameWindow.Draw_Image(correct, 0, 0, (constants.pygameWindowWidth), (constants.pygameWindowDepth))
     pickle.dump(database, open('userData/database.p', 'wb'))
 
     if (isHandCentered() > 0):
@@ -252,12 +266,14 @@ def HandleState3():
 
     elif (len(frame.hands) == 0):
         programState = 0
-
+    
     else:
+        timer = time.time()
         programState = 2
 
 #MAIN
 controller = Leap.Controller()
+randInt = random.randint(0, (userRecord["successful"] / 3) + 1)
 while True:
     k = 0
     pygameWindow.Prepare()
