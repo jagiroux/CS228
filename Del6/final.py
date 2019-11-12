@@ -12,7 +12,7 @@ import numpy as np
 from pygameWindow import PYGAME_WINDOW
 
 clf = pickle.load( open('userData/classifier.p', 'rb') )
-global testData, programState, centerOfHandX, centerOfHandY, timeSinceWrong, previousPredicted, numPredictions, userRecord, timer, sessionAttempted, sessionSuccess, databaseAttempted, databaseSuccess, characters_falling
+global testData, programState, centerOfHandX, centerOfHandY, timeSinceWrong, previousPredicted, numPredictions, userRecord, timer, sessionAttempted, sessionSuccess, databaseAttempted, databaseSuccess, characters_falling, level, numbers_destroyed
 previousPredicted = 999
 programState = 0
 numPredictions = 0
@@ -22,6 +22,7 @@ sessionSuccess = 0
 databaseAttempted = 0
 databaseSuccess = 0
 characters_falling = {}
+numbers_destroyed = 0
 
 database = pickle.load(open('userData/database.p','rb'))
 userName = raw_input('Please enter your name: ')
@@ -106,6 +107,9 @@ def Handle_Frame(frame):
     if (predictedClass == previousPredicted and programState == 2 and str(predictedClass) in characters_falling.keys()):
         print("Num Predictions: " + str(characters_falling[str(predictedClass)][1]))
         characters_falling[str(predictedClass)][1] += 1
+    else:
+        for char in characters_falling:
+            characters_falling[char][1] = 0
 
     indexFingerList = fingers.finger_type(Finger.TYPE_INDEX)
     indexFinger = indexFingerList[0]
@@ -124,10 +128,10 @@ def Handle_Frame(frame):
         yMax = y
 
     previousPredicted = predictedClass
-    text = "Digit: " + str(randInt) + " Presented: " + str(userRecord["digit" + str(randInt) + "attempted"]) + " Success: " + str(userRecord["digit" + str(randInt) + "success"])
-    font = pygame.font.Font(pygame.font.get_default_font(), 15)
-    text = font.render(text, True, (0,0,0))
-    pygameWindow.screen.blit(text, (0,constants.pygameWindowDepth / 2))
+  #  text = "Digit: " + str(randInt) + " Presented: " + str(userRecord["digit" + str(randInt) + "attempted"]) + " Success: " + str(userRecord["digit" + str(randInt) + "success"])
+   # font = pygame.font.Font(pygame.font.get_default_font(), 15)
+   # text = font.render(text, True, (0,0,0))
+   # pygameWindow.screen.blit(text, (0,constants.pygameWindowDepth / 2))
 
 def Handle_Finger(finger):
     for b in range (0,4):
@@ -176,16 +180,15 @@ def HandleState0():
         programState = 1
 
 def getRandom():
-    global randInt
     if (((userRecord["successful"] / 3) + 1) > 9):
-        randInt = random.randint(0, 9)
+        return random.randint(0, 9)
     else:
-        randInt = random.randint(0, (userRecord["successful"] / 3) + 1)
+        return random.randint(0, (userRecord["successful"] / 3) + 1)
 
 def addDigitToFalling():
-    characters_falling[str(randInt)] = [0, 0, random.randint(constants.pygameWindowWidth / 4 - 50, constants.pygameWindowWidth / 4 + 50)]
-        
-
+    num = str(getRandom())
+    if (num not in characters_falling.keys()):
+        characters_falling[num] = [0, 0, random.randint(constants.pygameWindowWidth / 4 - 75, constants.pygameWindowWidth / 4 + 75)]
 
 def isHandCentered():
     global centerOfHandX, centerOfHandY
@@ -242,34 +245,48 @@ def HandleState1():
         programState = 0
 
 def HandleState2():
-    global programState, randInt, k, timer, numPredictions, sessionAttempted, sessionSuccess, databaseSuccess, databaseAttempted, characters_falling
+    global programState, randInt, k, timer, numPredictions, sessionAttempted, sessionSuccess, databaseSuccess, databaseAttempted, characters_falling, level, numbers_destroyed
 
     k = 0
     Handle_Frame(frame)
     handImages = [zero, one, two, three, four, five, six, seven, eight, nine]
     handSymbols = [num0, num1, num2, num3, num4, num5, num6, num7, num8, num9]
 
-    #Scrolling text
-    font = pygame.font.Font(pygame.font.get_default_font(), 20)
-    for char in characters_falling.keys():
-        print("character " + str(char) + ": " + str(characters_falling[char]))
-        text = str(char)
-        text = font.render(text, True, (0,0,0))
-        pygameWindow.screen.blit(text, (characters_falling[char][2], constants.pygameWindowDepth / 2 + 15 + characters_falling[char][0]))
-        characters_falling[char][0] += 2
-        print("character " + str(char) + ": " + str(characters_falling[char]))
+    font = pygame.font.Font(pygame.font.get_default_font(), 25)
+    #score
+    text = "Score: " + str(numbers_destroyed)
+    text = font.render(text, True, (0,0,0))
+    pygameWindow.screen.blit(text, (constants.pygameWindowWidth / 4, constants.pygameWindowDepth / 2 ))
 
-        if(characters_falling[char][1] > 5):
+
+    #Scrolling text
+    for char in characters_falling.keys():
+        print("character " + str(char) + ": " + str(characters_falling[char]) + "\n")
+        text = str(char)
+        text = font.render(text, True, (characters_falling[char][1] * 42, 0, 0))
+        pygameWindow.screen.blit(text, (characters_falling[char][2], constants.pygameWindowDepth / 2 + 15 + characters_falling[char][0]))
+        characters_falling[char][0] += 3
+
+        if (characters_falling[char][0] > 218):
             try:
                 del characters_falling[char]
             except KeyError:
                 pass
-            getRandom()
+            numbers_destroyed -= 5
+            addDigitToFalling()
+            
+        elif (characters_falling[char][1] > 5):
+            try:
+                del characters_falling[char]
+            except KeyError:
+                pass
+            numbers_destroyed += 5
+            addDigitToFalling()
             addDigitToFalling()
         
-    pygameWindow.Draw_Image(handSymbols[randInt], constants.pygameWindowWidth / 2, 0, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
-    if (userRecord["digit" + str(randInt) + "attempted"] < 6):
-        pygameWindow.Draw_Image(handImages[randInt], constants.pygameWindowWidth / 2, constants.pygameWindowDepth / 2, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
+#    pygameWindow.Draw_Image(handSymbols[randInt], constants.pygameWindowWidth / 2, 0, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
+ #   if (userRecord["digit" + str(randInt) + "attempted"] < 6):
+ #       pygameWindow.Draw_Image(handImages[randInt], constants.pygameWindowWidth / 2, constants.pygameWindowDepth / 2, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
     
     if (isHandCentered() > 0):
         programState = 1
@@ -300,7 +317,6 @@ def HandleState3():
     userRecord["successful"] += 1
     sessionSuccess += 1
     userRecord["digit" + str(randInt) + "success"] += 1
-    getRandom()
     Handle_Frame(frame)
     pygameWindow.Draw_Image(correct, 0, 0, (constants.pygameWindowWidth), (constants.pygameWindowDepth))
     pickle.dump(database, open('userData/database.p', 'wb'))
@@ -317,7 +333,6 @@ def HandleState3():
 
 #MAIN
 controller = Leap.Controller()
-getRandom()
 addDigitToFalling()
 while True:
     k = 0
