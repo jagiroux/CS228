@@ -3,7 +3,7 @@ import pickle
 from knn import KNN
 
 train1 = pickle.load(open("userData/Clark_train1.p", "rb"))
-train2 = pickle.load(open("userData/Trinity_train2.p", "rb"))
+train2 = pickle.load(open("userData/Apple_train2.p", "rb"))
 train3 = pickle.load(open("userData/Apple_train3.p", "rb"))
 train4 = pickle.load(open("userData/Ward_train4.p", "rb"))
 train5 = pickle.load(open("userData/Deluca_train5.p", "rb"))

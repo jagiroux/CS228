@@ -102,8 +102,8 @@ def Handle_Frame(frame):
         Handle_Finger(finger)
     testData = CenterData(testData)
     predictedClass = clf.Predict(testData)
-    print("predicted class: " + str(predictedClass))
-    print("keys: " + str(characters_falling.keys()))
+    print("predicted class: " + str(predictedClass) + "\n")
+ #   print("keys: " + str(characters_falling.keys()))
     if (predictedClass == previousPredicted and programState == 2 and str(predictedClass) in characters_falling.keys()):
         print("Num Predictions: " + str(characters_falling[str(predictedClass)][1]))
         characters_falling[str(predictedClass)][1] += 1
@@ -188,7 +188,7 @@ def getRandom():
 def addDigitToFalling():
     num = str(getRandom())
     if (num not in characters_falling.keys()):
-        characters_falling[num] = [0, 0, random.randint(constants.pygameWindowWidth / 4 - 75, constants.pygameWindowWidth / 4 + 75)]
+        characters_falling[num] = [0, 0, random.randint(constants.pygameWindowWidth / 4 - 75, constants.pygameWindowWidth / 4 + 75)] # indexes y pos, number of signs, x pos, 
 
 def isHandCentered():
     global centerOfHandX, centerOfHandY
@@ -212,6 +212,14 @@ def isHandCentered():
 
     else:
         return 0
+
+def findLowest():
+    deepest = max(characters_falling[aoeu][0] for aoeu in characters_falling)
+    for aoeu in characters_falling.keys():
+        if (characters_falling[aoeu][0] == deepest):
+            lowest = aoeu
+
+    return lowest
 
 def HandleState1():
     global programState, timeSinceWrong, k, timer
@@ -258,10 +266,11 @@ def HandleState2():
     text = font.render(text, True, (0,0,0))
     pygameWindow.screen.blit(text, (constants.pygameWindowWidth / 4, constants.pygameWindowDepth / 2 ))
 
+    lowest = findLowest()
 
     #Scrolling text
     for char in characters_falling.keys():
-        print("character " + str(char) + ": " + str(characters_falling[char]) + "\n")
+        
         text = str(char)
         text = font.render(text, True, (characters_falling[char][1] * 42, 0, 0))
         pygameWindow.screen.blit(text, (characters_falling[char][2], constants.pygameWindowDepth / 2 + 15 + characters_falling[char][0]))
@@ -276,17 +285,19 @@ def HandleState2():
             addDigitToFalling()
             
         elif (characters_falling[char][1] > 5):
+            userRecord["successful"] += 1
             try:
                 del characters_falling[char]
             except KeyError:
                 pass
             numbers_destroyed += 5
             addDigitToFalling()
-            addDigitToFalling()
-        
-#    pygameWindow.Draw_Image(handSymbols[randInt], constants.pygameWindowWidth / 2, 0, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
- #   if (userRecord["digit" + str(randInt) + "attempted"] < 6):
- #       pygameWindow.Draw_Image(handImages[randInt], constants.pygameWindowWidth / 2, constants.pygameWindowDepth / 2, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
+            addDigitToFalling()   
+            lowest = findLowest()
+
+    pygameWindow.Draw_Image(handSymbols[int(lowest)], constants.pygameWindowWidth / 2, 0, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
+  #  if (userRecord["digit" + str(randInt) + "attempted"] < 10):
+    pygameWindow.Draw_Image(handImages[int(lowest)], constants.pygameWindowWidth / 2, constants.pygameWindowDepth / 2, (constants.pygameWindowWidth / 2), (constants.pygameWindowDepth / 2))
     
     if (isHandCentered() > 0):
         programState = 1
