@@ -1,4 +1,4 @@
-pygameWindowWidth = 500
-pygameWindowDepth = 500
+pygameWindowWidth = 700
+pygameWindowDepth = 700
 max = 300
 min = -300
